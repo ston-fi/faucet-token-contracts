@@ -1,0 +1,6 @@
+#include "../../node_modules/@ston-fi/funcbox/autoload.fc";
+#include "errors.fc";
+#include "params.fc";
+#include "op.fc";
+#include "gas.fc";
+#include "contracts.fc";

@@ -1,0 +1,21 @@
+(int) handle_minter_messages() impure inline {
+    slice in_msg_body = ctx.at(BODY);
+
+    if ctx.at(OPCODE) == op::internal_mint { 
+        int amount = in_msg_body~load_coins(); ;; we accept "0" to just init the wallet
+        slice response_address = in_msg_body~load_msg_addr();
+
+        storage::balance += amount;
+        storage::save();
+        
+        reserves::max_balance(storage_fee::wallet);
+        utils::send_excesses(
+            0,
+            response_address,
+            CARRY_ALL_BALANCE
+        );
+        return (true);
+    }
+  
+    return (false);
+}

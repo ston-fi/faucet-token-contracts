@@ -1,0 +1,6 @@
+const op::mint = "mint"c;
+const op::internal_mint = "internal_mint"c;
+const op::change_admin = "change_admin"c;
+const op::change_content = "change_content"c;
+const op::burn_notification = 0x7bdd97de;
+const op::internal_transfer = 0x178d4519;

@@ -1,0 +1,38 @@
+(int) handle_getter_messages() impure inline {
+    slice in_msg_body = ctx.at(BODY);
+
+    if ctx.at(OPCODE) == op::ft::provide_wallet_address { 
+        throw_unless(error::insufficient_gas, ctx.at(MSG_VALUE) > ctx.at(FWD_FEE) * 2 
+            + storage_fee::minter + gas::minter::provide_wallet_address);
+        slice owner_address = in_msg_body~load_msg_addr();
+        int include_address? = in_msg_body~load_uint(1);
+
+        cell included_address = include_address? 
+            ? begin_cell().store_slice(owner_address).end_cell() : null();
+
+        var payload = any::btake_wallet_address();
+
+        if owner_address.address::check_workchain(params::workchain) {
+            var wallet = contracts::from_sources(
+                wallet_data(owner_address, my_address()),
+                storage::wallet_code
+            );
+
+            payload = payload.store_slice(wallet~address(params::workchain));
+        } else {
+            payload = payload.store_uint(0, 2); ;; addr_none
+        }
+
+        reserves::max_balance(storage_fee::minter);
+        msgs::send_bsimple(
+            0, 
+            ctx.at(SENDER),
+            any::btake_wallet_address()
+                .store_maybe_ref(included_address),
+            CARRY_ALL_BALANCE
+        );
+        return (true);
+    }
+  
+    return (false);
+}

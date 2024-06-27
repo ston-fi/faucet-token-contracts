@@ -1,0 +1,10 @@
+_ get_wallet_data() method_id {
+    storage::load();
+
+    return (
+        storage::balance,
+        storage::owner_address,
+        storage::minter_address,
+        my_code()
+    );
+}

@@ -1,0 +1,37 @@
+(int) handle_admin_messages() impure inline {
+    slice in_msg_body = ctx.at(BODY);
+
+    if ctx.at(OPCODE) == op::change_admin { 
+        slice new_admin_address = in_msg_body~load_msg_addr();
+        
+        throw_unless(error::wrong_workchain, 
+            new_admin_address.address::check_workchain(params::workchain));
+        storage::admin_address = new_admin_address;
+        
+        storage::save();
+
+        reserves::max_balance(storage_fee::minter);
+        utils::send_excesses(
+            0,
+            storage::admin_address,
+            CARRY_ALL_BALANCE
+        );
+        return (true);
+    }
+
+    if ctx.at(OPCODE) == op::change_content { 
+        storage::content = in_msg_body~load_ref();
+        
+        storage::save();
+
+        reserves::max_balance(storage_fee::minter);
+        utils::send_excesses(
+            0,
+            storage::admin_address,
+            CARRY_ALL_BALANCE
+        );
+        return (true);
+    }
+  
+    return (false);
+}

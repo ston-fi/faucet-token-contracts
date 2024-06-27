@@ -1,0 +1,84 @@
+(int) handle_owner_messages() impure inline {
+    slice in_msg_body = ctx.at(BODY);
+
+    if ctx.at(OPCODE) == op::ft::transfer { 
+        int jetton_amount = in_msg_body~load_coins();
+        slice to_owner_address = in_msg_body~load_msg_addr();
+        slice response_address = in_msg_body~load_msg_addr();
+        cell custom_payload = in_msg_body~load_dict();
+        int forward_ton_amount = in_msg_body~load_coins();
+
+        throw_unless(error::invalid_call, in_msg_body.slice_bits() >= 1);
+        slice either_forward_payload = in_msg_body;
+
+        storage::balance -= jetton_amount;
+
+        throw_unless(error::wrong_workchain, 
+            to_owner_address.address::check_workchain(params::workchain));
+        throw_unless(error::wrong_workchain, 
+            response_address.address::check_workchain_nofail(params::workchain));
+        throw_unless(error::invalid_amount, storage::balance >= 0);
+        
+        ;; -> Wallet -> Wallet -> 
+        ;;                     ->
+        throw_unless(error::insufficient_gas, ctx.at(MSG_VALUE) > ctx.at(FWD_FEE) * 4 
+            + storage_fee::wallet + gas::wallet::transfer
+            + storage_fee::wallet + gas::wallet::internal_transfer
+            + forward_ton_amount);
+
+        reserves::max_balance(storage_fee::wallet);
+        var wallet = contracts::from_sources(
+            wallet_data(to_owner_address, storage::minter_address),
+            my_code()
+        );
+
+        msgs::send_with_stateinit(
+            0, 
+            wallet~address(params::workchain), 
+            wallet~state_init(), 
+            wallet::internal_transfer(
+                jetton_amount,
+                storage::owner_address,
+                response_address,
+                forward_ton_amount,
+                either_forward_payload
+            ),
+            CARRY_ALL_BALANCE
+        );
+
+        storage::save();
+        return (true);
+    }
+
+    if ctx.at(OPCODE) == op::ft::burn { 
+        int jetton_amount = in_msg_body~load_coins();
+        slice response_address = in_msg_body~load_msg_addr();
+
+        storage::balance -= jetton_amount;
+        throw_unless(error::invalid_amount, jetton_amount > 0);
+        throw_unless(error::invalid_amount, storage::balance >= 0);
+
+        throw_unless(error::wrong_workchain, 
+            response_address.address::check_workchain_nofail(params::workchain));
+        ;; -> Wallet -> Minter -> 
+        throw_unless(error::insufficient_gas, ctx.at(MSG_VALUE) > ctx.at(FWD_FEE) * 3 
+            + storage_fee::wallet + gas::wallet::burn
+            + storage_fee::minter + gas::minter::burn_notification);
+
+        reserves::max_balance(storage_fee::wallet);
+        msgs::send_simple(
+            0, 
+            storage::minter_address, 
+            minter::burn_notification(
+                jetton_amount,
+                storage::owner_address,
+                response_address
+            ),
+            CARRY_ALL_BALANCE
+        );
+        storage::save();
+        return (true);
+    }
+  
+    return (false);
+}

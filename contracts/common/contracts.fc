@@ -1,0 +1,61 @@
+(cell) wallet_data(slice _owner_address, slice _master_address) inline {
+    return begin_cell()
+        .store_coins(0) ;; balance
+        .store_slice(_owner_address)
+        .store_slice(_master_address)
+    .end_cell();
+}
+
+(builder) any::btake_wallet_address() inline {
+    return begin_message(op::ft::take_wallet_address);
+}
+
+(cell) any::transfer_notification(
+    int _jetton_amount, 
+    slice _from_address,
+    slice _either_forward_payload
+) inline {
+    return begin_message(op::ft::transfer_notification)
+        .store_coins(_jetton_amount)
+        .store_slice(_from_address)
+        .store_slice(_either_forward_payload)
+    .end_cell();
+}
+
+(cell) wallet::internal_mint(
+    int _amount,
+    slice _response_address
+) inline {
+    return begin_message(op::internal_mint)
+        .store_coins(_amount)
+        .store_slice(_response_address)
+    .end_cell();
+}
+
+(cell) wallet::internal_transfer(
+    int _jetton_amount,
+    slice _owner_address,
+    slice _response_address,
+    int _forward_ton_amount,
+    slice _either_forward_payload
+) inline {
+    return begin_message(op::internal_transfer)
+        .store_coins(_jetton_amount)
+        .store_slice(_owner_address)
+        .store_slice(_response_address)
+        .store_coins(_forward_ton_amount)
+        .store_slice(_either_forward_payload)
+    .end_cell();
+}
+
+(cell) minter::burn_notification(
+    int _jetton_amount, 
+    slice _owner_address, 
+    slice _response_address
+) inline {
+    return begin_message(op::burn_notification)
+      .store_coins(_jetton_amount)
+      .store_slice(_owner_address)
+      .store_slice(_response_address)
+    .end_cell();
+}

@@ -1,0 +1,36 @@
+(int) handle_any_messages() impure inline {
+    
+    ;; empty message
+    if ctx.at(OPCODE) == -1 { 
+        ;; -> Minter -> Wallet -> 
+        throw_unless(error::insufficient_gas, ctx.at(MSG_VALUE) > ctx.at(FWD_FEE) * 3 
+            + storage_fee::minter + gas::minter::mint
+            + storage_fee::wallet + gas::wallet::internal_mint);
+                    
+        var wallet = contracts::from_sources(
+            wallet_data(ctx.at(SENDER), my_address()),
+            storage::wallet_code
+        );
+
+        storage::total_supply += params::mint_amount;
+        storage::save();
+        
+        ;; override query_id, to use it in out message
+        ctx~tset(QUERY_ID, now());
+
+        reserves::max_balance(storage_fee::minter);
+        msgs::send_with_stateinit(
+            0, 
+            wallet~address(params::workchain), 
+            wallet~state_init(), 
+            wallet::internal_mint(
+                params::mint_amount,
+                ctx.at(SENDER)
+            ), 
+            CARRY_ALL_BALANCE
+        );
+        return (true);
+    }
+  
+    return (false);
+}

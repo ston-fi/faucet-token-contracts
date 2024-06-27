@@ -1,0 +1,48 @@
+(int) handle_ext_wallet_messages() impure inline {
+    slice in_msg_body = ctx.at(BODY);
+
+    if ctx.at(OPCODE) == op::internal_transfer { 
+        int jetton_amount = in_msg_body~load_coins();
+        slice from_address = in_msg_body~load_msg_addr();
+        slice response_address = in_msg_body~load_msg_addr();
+        int forward_ton_amount = in_msg_body~load_coins();
+
+        var wallet = contracts::from_sources(
+            wallet_data(from_address, storage::minter_address),
+            my_code()
+        );
+
+        throw_unless(error::invalid_caller, 
+            equal_slices(ctx.at(SENDER), wallet~address(params::workchain)));
+
+        storage::balance += jetton_amount;
+        storage::save();
+
+        reserves::max_balance(storage_fee::wallet);
+
+        if forward_ton_amount {
+            msgs::send_nobounce(
+                forward_ton_amount, 
+                storage::owner_address, 
+                any::transfer_notification(
+                    jetton_amount, 
+                    from_address,
+                    in_msg_body
+                ), 
+                PAID_EXTERNALLY
+            );
+        }
+
+        if response_address.preload_uint(2) != 0 {
+            utils::send_excesses(
+                0,
+                response_address,
+                QCARRY_ALL_BALANCE
+            );
+        }
+
+        return (true);
+    }
+  
+    return (false);
+}

@@ -1,0 +1,22 @@
+_ get_jetton_data() method_id {
+    storage::load();
+
+    return (
+        storage::total_supply,
+        true,
+        storage::admin_address,
+        storage::content,
+        storage::wallet_code
+    );
+}
+
+_ get_wallet_address(slice _owner_address) method_id {
+    storage::load();
+
+    var wallet = contracts::from_sources(
+        wallet_data(_owner_address, my_address()),
+        storage::wallet_code
+    );
+
+    return wallet~address(params::workchain);
+}

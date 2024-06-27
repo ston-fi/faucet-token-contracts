@@ -1,0 +1,23 @@
+global int   storage::total_supply;
+global slice storage::admin_address;
+global cell  storage::content;
+global cell  storage::wallet_code;
+
+() storage::load() impure inline_ref {
+    var ds = get_data().begin_parse();
+    storage::total_supply  = ds~load_coins();
+    storage::admin_address = ds~load_msg_addr();
+    storage::content       = ds~load_ref();
+    storage::wallet_code   = ds~load_ref();
+    ds.end_parse();
+}
+
+() storage::save() impure inline_ref {
+    set_data(begin_cell()
+        .store_coins(storage::total_supply)
+        .store_slice(storage::admin_address)
+        .store_ref(storage::content)
+        .store_ref(storage::wallet_code)
+    .end_cell());
+}
+

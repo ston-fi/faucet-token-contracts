@@ -1,0 +1,13 @@
+const storage_fee::minter = 10000000; ;; 0.01 TON
+const storage_fee::wallet = 10000000; ;; 0.01 TON
+
+const gas::minter::mint = 10000000; ;; 0.01 TON 
+const gas::minter::burn_notification = 10000000; ;; 0.01 TON
+const gas::minter::provide_wallet_address = 10000000; ;; 0.01 TON
+const gas::minter::on_bounce = 10000000; ;; 0.01 TON
+
+const gas::wallet::transfer = 10000000; ;; 0.01 TON
+const gas::wallet::burn = 10000000; ;; 0.01 TON
+const gas::wallet::internal_transfer = 10000000; ;; 0.01 TON  
+const gas::wallet::internal_mint = 10000000; ;; 0.01 TON
+const gas::wallet::on_bounce = 10000000; ;; 0.01 TON

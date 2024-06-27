@@ -1,0 +1,41 @@
+#include "common/imports.fc";
+#include "wallet/imports.fc";
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    ctx::init(my_balance, msg_value, in_msg_full, in_msg_body);
+    
+    storage::load();
+    
+    if ctx.at(IS_BOUNCED) {         
+        throw_unless(error::wrong_op, 
+                (ctx.at(OPCODE) == op::internal_transfer) 
+        | (ctx.at(OPCODE) == op::burn_notification));
+
+        slice in_msg_body = ctx.at(BODY);
+        storage::balance += in_msg_body~load_coins();
+    
+        storage::save();
+        return ();
+    }
+    
+    throw_unless(error::wrong_workchain, 
+        ctx.at(SENDER).address::check_workchain(params::workchain));
+
+    if handle_ext_wallet_messages() {
+        return ();
+    }
+
+    if equal_slices(ctx.at(SENDER), storage::owner_address) {
+        if handle_owner_messages() {
+            return ();
+        }
+    }
+    
+    if equal_slices(ctx.at(SENDER), storage::minter_address) {
+        if handle_minter_messages() {
+            return ();
+        }
+    }
+
+    throw(error::wrong_op);
+}

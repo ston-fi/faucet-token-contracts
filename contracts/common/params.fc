@@ -1,0 +1,6 @@
+const params::workchain = 0;
+const params::version_major = 0;
+const params::version_minor = 1;
+const params::version_development = "";
+
+const params::mint_amount = 10000000000;

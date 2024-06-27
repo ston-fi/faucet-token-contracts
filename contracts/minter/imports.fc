@@ -1,0 +1,6 @@
+#include "storage.fc";
+#include "get.fc";
+#include "msgs/any.fc";
+#include "msgs/getter.fc";
+#include "msgs/admin.fc";
+#include "msgs/wallet.fc";
